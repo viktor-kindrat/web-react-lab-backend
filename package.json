@@ -1,0 +1,27 @@
+{
+  "name": "insect_server",
+  "version": "1.0.0",
+  "description": "Server for insect app e-commerece project",
+  "main": "app.js",
+  "scripts": {
+    "start": "node --env-file=.env app.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viktor-kindrat/web-react-lab-backend.git"
+  },
+  "keywords": [
+    "nodejs"
+  ],
+  "author": "Viktor Kindrat",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/viktor-kindrat/web-react-lab-backend/issues"
+  },
+  "homepage": "https://github.com/viktor-kindrat/web-react-lab-backend#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "mongoose": "^8.7.3"
+  }
+}
