@@ -5,6 +5,6 @@ import insectRouter from "./Insect/Router.mjs"
 const router = Router();
 router.use(cors())
 
-router.use("/insect", insectRouter)
+router.use("/insects", insectRouter)
 
 export default router;
