@@ -4,9 +4,39 @@ import Image from "../../models/image.mjs";
 import sharp from "sharp";
 import mongoose from "mongoose";
 
+const INSECTS_PER_PAGE = 52;
+
 export const getInsects = async (req, res) => {
     try {
+        let {page = 1, name, priceRange, speedRange} = req.query;
+        page = Number(page)
+
+        let filterObject = {}
+
+        if (name) {
+            filterObject.name = {
+                $regex: name,
+                $options: "i"
+            }
+        }
+
+        if (priceRange) {
+            filterObject["price.value"] = {
+                $gte: Number(priceRange[0]),
+                $lte: Number(priceRange[1]),
+            }
+        }
+
+        if (speedRange) {
+            filterObject["speedInMetersPerHour"] = {
+                $gte: Number(speedRange[0]),
+                $lte: Number(speedRange[1]),
+            }
+        }
+
         const insects = await Insect.aggregate([{
+            $match: filterObject
+        },{
             $addFields: {
                 imageLink: {
                     $concat: ["/media/image/", {$toString: "$image"}]
@@ -14,12 +44,28 @@ export const getInsects = async (req, res) => {
                 cardColor: "$color"
             }
         }, {
+            $skip: INSECTS_PER_PAGE * (page - 1),
+        }, {
+            $limit: INSECTS_PER_PAGE,
+        }, {
             $project: {
                 image: 0
             }
         }]);
+        const documentCount = await Insect.countDocuments({})
+        const totalPages = Math.ceil(documentCount / INSECTS_PER_PAGE);
+        const maxPrice = await Insect.findOne({}).sort({price: -1}).select("price")
+        const maxSpeed = await Insect.findOne({}).sort({speedInMetersPerHour: -1}).select("speedInMetersPerHour")
 
-        res.status(200).json(insects);
+        res.status(200).json({
+            status: 200,
+            message: "OK",
+            page: page,
+            totalPages: totalPages,
+            maxPrice: maxPrice.price.value,
+            maxSpeed: maxSpeed.speedInMetersPerHour,
+            body: insects,
+        });
     } catch (error) {
         res.status(500).json({status: 500, message: error.message});
     }
@@ -34,7 +80,7 @@ export const getInsectsById = async (req, res) => {
             $match: {
                 _id: identifier
             }
-        },{
+        }, {
             $addFields: {
                 imageLink: {
                     $concat: ["/media/image/", {$toString: "$image"}]
@@ -43,7 +89,8 @@ export const getInsectsById = async (req, res) => {
             }
         }, {
             $project: {
-                image: 0
+                image: 0,
+                color: 0
             }
         }]);
 
@@ -95,7 +142,7 @@ export const createInsect = async (req, res) => {
         });
 
         await insect.save();
-        res.status(201).json({status: 201, message: "No content.", body: insect});
+        res.status(201).json({status: 201, message: "Created.", body: insect});
     } catch (error) {
         console.log(error)
         res.status(400).json({status: 500, message: error.message});
